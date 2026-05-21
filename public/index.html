@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BegrijpendTuben – Kijk, begrijp en leer van YouTube-filmpjes</title>
+
+  <!-- SEO basis -->
+  <meta name="description" content="BegrijpendTuben is een gratis educatieve website voor basisschoolkinderen. Kijk een kort educatief filmpje van Het Klokhuis, Jeugdjournaal of Schooltv en beantwoord daarna leuke meerkeuze-vragen." />
+  <meta name="keywords" content="educatief, basisschool, kinderen, youtube, klokhuis, jeugdjournaal, schooltv, quiz, begrijpend lezen, leren" />
+  <meta name="author" content="Joost van de Ven" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://begrijpendtuben.nl/" />
+
+  <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://begrijpendtuben.nl/" />
+  <meta property="og:title" content="BegrijpendTuben – Leer van YouTube-filmpjes" />
+  <meta property="og:description" content="Kijk een educatief filmpje en beantwoord meerkeuze-vragen. Gratis voor basisschoolkinderen." />
+  <meta property="og:image" content="https://begrijpendtuben.nl/static/og-image.png" />
+  <meta property="og:locale" content="nl_NL" />
+  <meta property="og:site_name" content="BegrijpendTuben" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="BegrijpendTuben – Leer van YouTube-filmpjes" />
+  <meta name="twitter:description" content="Kijk een educatief filmpje en beantwoord meerkeuze-vragen. Gratis voor basisschoolkinderen." />
+  <meta name="twitter:image" content="https://begrijpendtuben.nl/static/og-image.png" />
+
+  <!-- GEO / AI-zoekmachines (gestructureerde data) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "BegrijpendTuben",
+    "url": "https://begrijpendtuben.nl",
+    "description": "Educatieve quiz-app voor basisschoolkinderen. Kijk een kort YouTube-filmpje van Het Klokhuis, Jeugdjournaal of Schooltv en beantwoord daarna meerkeuze-vragen om te laten zien wat je hebt geleerd.",
+    "applicationCategory": "EducationalApplication",
+    "educationalLevel": "Basisschool (groep 1-8)",
+    "audience": {
+      "@type": "EducationalAudience",
+      "educationalRole": "student",
+      "audienceType": "Kinderen van 6 tot 13 jaar"
+    },
+    "inLanguage": "nl",
+    "isAccessibleForFree": true,
+    "author": {
+      "@type": "Person",
+      "name": "Joost van de Ven"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/static/style.css" />
+
+  <!-- Niveau-filter: afgeleid uit de URL (vervangt Flask-template) -->
+  <script>
+    const _pad = window.location.pathname.replace(/\/+$/, '');
+    window.NIVEAU = _pad === '/onderbouw' ? 'onderbouw' : _pad === '/bovenbouw' ? 'bovenbouw' : 'alles';
+  </script>
+
+  <!-- Firebase (optioneel - voor score-sync) -->
+  <script type="module">
+    const firebaseConfig = {
+      apiKey: "AIzaSyATs0NiHUL_4WKeQRasKIKyVlacT-E4bRk",
+      authDomain: "begrijpendtuben.firebaseapp.com",
+      projectId: "begrijpendtuben",
+      storageBucket: "begrijpendtuben.firebasestorage.app",
+      messagingSenderId: "516169280195",
+      appId: "1:516169280195:web:11b183dc3a37d8f7f31076"
+    };
+
+    const [{ initializeApp }, { getFirestore, doc, setDoc, getDoc, serverTimestamp }, { getAuth, signInAnonymously }] =
+      await Promise.all([
+        import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"),
+        import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"),
+        import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"),
+      ]);
+
+    const fbApp = initializeApp(firebaseConfig);
+    window.db   = getFirestore(fbApp);
+    window.auth = getAuth(fbApp);
+    window.firebaseFuncs = { doc, setDoc, getDoc, serverTimestamp };
+
+    signInAnonymously(window.auth)
+      .then(u => {
+        window.fbUid = u.user.uid;
+        document.dispatchEvent(new CustomEvent('firebase-ready'));
+      })
+      .catch(e => console.warn('Firebase auth fout:', e));
+  </script>
+</head>
+<body data-thema="lief">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-inner">
+      <span class="logo-emoji">🎬</span>
+      <h1 class="logo-tekst">BegrijpendTuben</h1>
+      <span class="logo-emoji">✨</span>
+    </div>
+    <p class="tagline">Kijk een filmpje en laat zien wat jij hebt geleerd!</p>
+
+    <div class="speler-balk" id="spelerBalk" style="display:none;">
+      <div id="spelersContainer"></div>
+      <button class="speler-nieuw-knop" onclick="App.nieuweSpeler()" title="Andere speler toevoegen">+ Nieuw</button>
+    </div>
+
+    <div class="sterren-balk" id="sterrenBalk" style="display:none;">
+      <span class="sterren-label">Jouw sterren:</span>
+      <span class="sterren-waarde" id="sterrenWaarde">⭐ 0</span>
+      <span class="sterren-label">· Totaal goed:</span>
+      <span class="sterren-waarde" id="totaalGoed">0 / 0</span>
+    </div>
+  </header>
+
+  <!-- STAP-INDICATOR -->
+  <div class="stap-balk" id="stapBalk">
+    <div class="stap actief" id="stap1Dot" data-stap="1">
+      <span class="stap-getal">1</span>
+      <span class="stap-label" data-kort="Kies">Kies een filmpje</span>
+    </div>
+    <div class="stap-lijn"></div>
+    <div class="stap" id="stap2Dot" data-stap="2">
+      <span class="stap-getal">2</span>
+      <span class="stap-label" data-kort="Kijk">Bekijk het filmpje</span>
+    </div>
+    <div class="stap-lijn"></div>
+    <div class="stap" id="stap3Dot" data-stap="3">
+      <span class="stap-getal">3</span>
+      <span class="stap-label" data-kort="Quiz">Beantwoord vragen</span>
+    </div>
+    <div class="stap-lijn"></div>
+    <div class="stap" id="stap4Dot" data-stap="4">
+      <span class="stap-getal">4</span>
+      <span class="stap-label" data-kort="Score">Bekijk je score</span>
+    </div>
+  </div>
+  <div class="stap-actief-label" id="stapActiefLabel">Stap 1: Kies een filmpje</div>
+
+  <!-- SCHERM 1 - VIDEO KIEZEN -->
+  <section class="scherm actief" id="schermKiezen">
+    <div class="kaart intro-kaart">
+      <h2>Hoi! Welk filmpje wil jij bekijken? 🌟</h2>
+      <p>Kies een kanaal of bekijk alle filmpjes!</p>
+    </div>
+
+    <div class="kaart zoek-kaart">
+      <div class="categorie-tabs" id="categorieTabs">
+        <button class="cat-tab actief" onclick="App.filterKanaal(this, '')">Alles</button>
+        <button class="cat-tab" onclick="App.filterKanaal(this, 'Het Klokhuis')">🔬 Het Klokhuis</button>
+        <button class="cat-tab" onclick="App.filterKanaal(this, 'Jeugdjournaal')">📰 Jeugdjournaal</button>
+        <button class="cat-tab" onclick="App.filterKanaal(this, 'De Buitendienst')">🐾 De Buitendienst</button>
+        <button class="cat-tab" onclick="App.filterKanaal(this, 'Vroege Vogels')">🌿 Vroege Vogels</button>
+        <button class="cat-tab" onclick="App.filterKanaal(this, 'Klaas Kan Alles')">🚀 Klaas Kan Alles</button>
+        <button class="cat-tab" onclick="App.filterKanaal(this, 'Jort Kelder Geschiedenis')">🏛️ Geschiedenis</button>
+        <button class="cat-tab" onclick="App.filterKanaal(this, 'Schooltv')">📚 Schooltv</button>
+        <button class="cat-tab" onclick="App.filterKanaal(this, 'Clipphanger')">🎒 Clipphanger</button>
+      </div>
+    </div>
+
+    <div class="kaart">
+      <h3 id="videoGridTitel">🎥 Alle filmpjes</h3>
+      <div class="video-grid" id="videoGrid">
+        <div class="laad-spinner">
+          <span class="spinner-cirkel"></span>
+          <p>Filmpjes laden...</p>
+        </div>
+      </div>
+      <p class="geen-resultaten" id="geenResultaten" style="display:none;">
+        😕 Geen filmpjes gevonden voor dit kanaal.
+      </p>
+    </div>
+  </section>
+
+  <!-- SCHERM 2 - VIDEO AFSPELEN -->
+  <section class="scherm" id="schermVideo">
+    <button class="knop knop-terug" onclick="App.toonScherm('schermKiezen')">
+      ← Ander filmpje kiezen
+    </button>
+
+    <div class="kaart">
+      <h2 id="videoTitel">Filmpje 🎬</h2>
+      <p id="videoBeschrijving" class="video-beschrijving"></p>
+    </div>
+
+    <div class="kaart video-kaart">
+      <div class="video-wrapper">
+        <iframe
+          id="youtubePlayer"
+          src=""
+          title="YouTube video"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-presentation"
+        ></iframe>
+        <div class="video-einde-overlay" id="videoEindeOverlay" style="display:none;">
+          <div class="einde-inhoud">
+            <span class="einde-emoji">🎉</span>
+            <p class="einde-tekst">Klaar met kijken?</p>
+            <button class="knop knop-groot knop-groen" onclick="App.startQuiz()">
+              ✅ Start de vragen →
+            </button>
+            <button class="knop knop-klein knop-grijs" onclick="document.getElementById('videoEindeOverlay').style.display='none'">
+              ↩ Filmpje opnieuw kijken
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kaart klaar-kaart">
+      <p class="klaar-tekst">
+        🎓 Als je klaar bent met kijken, klik dan op de knop!
+      </p>
+      <button class="knop knop-groot knop-groen" id="btnKlaarMetKijken" onclick="App.startQuiz()">
+        ✅ Ik ben klaar! Start de vragen →
+      </button>
+    </div>
+  </section>
+
+  <!-- SCHERM 3 - QUIZ -->
+  <section class="scherm" id="schermQuiz">
+    <button class="knop knop-terug knop-terug-rood" onclick="App.stopQuiz()">
+      ✕ Stop quiz
+    </button>
+
+    <div class="kaart voortgang-kaart">
+      <div class="voortgang-header">
+        <span id="vraagTeller">Vraag 1 van 5</span>
+        <span id="scoreTeller">⭐ Score: 0</span>
+      </div>
+      <div class="voortgang-balk">
+        <div class="voortgang-vulling" id="voortgangVulling"></div>
+      </div>
+    </div>
+
+    <div class="kaart vraag-kaart" id="vraagKaart">
+      <div class="vraag-nummer" id="vraagNummer">Vraag 1</div>
+      <h2 class="vraag-tekst" id="vraagTekst">Loading...</h2>
+      <div class="antwoord-grid" id="antwoordGrid"></div>
+
+      <div class="feedback-blok" id="feedbackBlok" style="display:none;">
+        <div class="feedback-emoji" id="feedbackEmoji"></div>
+        <div class="feedback-bericht" id="feedbackBericht"></div>
+        <div class="feedback-uitleg" id="feedbackUitleg"></div>
+        <button class="knop knop-groot knop-paars" id="btnVolgende" onclick="App.volgendeVraag()">
+          Volgende vraag →
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCHERM 4 - RESULTAAT -->
+  <section class="scherm" id="schermResultaat">
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <div class="kaart resultaat-kaart">
+      <div class="resultaat-trophy" id="resultaatTrophy">🏆</div>
+      <h2 class="resultaat-titel" id="resultaatTitel">Super gedaan!</h2>
+
+      <div class="score-cirkel">
+        <span class="score-groot" id="scoreGroot">0</span>
+        <span class="score-max" id="scoreMax">/ 5</span>
+      </div>
+      <p class="score-bericht" id="scoreBericht">Je hebt alle vragen goed!</p>
+
+      <div class="sterren-sessie" id="sterrenSessie"></div>
+
+      <div class="totaal-kaart" id="totaalKaart">
+        <p class="totaal-label">Jouw totale sterren:</p>
+        <p class="totaal-sterren" id="totaalSterren">⭐ 0 sterren</p>
+        <p class="totaal-sub" id="totaalSub">Je hebt al 0 vragen goed beantwoord!</p>
+      </div>
+
+      <div class="antwoord-overzicht" id="antwoordOverzicht"></div>
+
+      <div class="resultaat-knoppen">
+        <button class="knop knop-groot knop-groen" onclick="App.opnieuwDezelfde()">
+          🔄 Dezelfde vragen opnieuw
+        </button>
+        <button class="knop knop-groot knop-paars" onclick="App.toonScherm('schermKiezen')">
+          🎬 Nieuw filmpje kiezen
+        </button>
+      </div>
+
+      <button class="knop knop-klein knop-grijs" onclick="App.resetScore()" style="margin-top:16px;">
+        🗑️ Score resetten
+      </button>
+    </div>
+  </section>
+
+  <!-- NAAM-MODAL -->
+  <div class="modal-overlay" id="naamModal" style="display:none;">
+    <div class="modal-kaart">
+      <button class="modal-sluit" id="modalSluitKnop" onclick="document.getElementById('naamModal').style.display='none'" style="display:none;" aria-label="Sluiten">✕</button>
+      <span class="modal-emoji">🎬</span>
+      <h2 class="modal-titel">Hoi! Wat is jouw naam?</h2>
+      <p class="modal-sub">Zo houden we jouw score bij!</p>
+
+      <input type="text"
+             id="naamInvoer"
+             class="naam-invoer"
+             placeholder="Jouw naam..."
+             maxlength="20"
+             autocomplete="off" />
+
+      <div class="thema-kiezer">
+        <p class="thema-label">Kies jouw thema</p>
+        <div class="thema-opties">
+          <button class="thema-knop actief" data-thema="lief" onclick="App.kiesThema(this)">
+            <span class="thema-kleur" style="background: linear-gradient(135deg, #7c3aed, #ec4899)"></span>
+            🌸 Lief
+          </button>
+          <button class="thema-knop" data-thema="stoer" onclick="App.kiesThema(this)">
+            <span class="thema-kleur" style="background: linear-gradient(135deg, #0369a1, #16a34a)"></span>
+            ⚡ Stoer
+          </button>
+          <button class="thema-knop" data-thema="magisch" onclick="App.kiesThema(this)">
+            <span class="thema-kleur" style="background: linear-gradient(135deg, #9333ea, #c026d3)"></span>
+            ✨ Magisch
+          </button>
+          <button class="thema-knop" data-thema="vrolijk" onclick="App.kiesThema(this)">
+            <span class="thema-kleur" style="background: linear-gradient(135deg, #d97706, #f97316)"></span>
+            🌈 Vrolijk
+          </button>
+        </div>
+      </div>
+
+      <button class="knop knop-groot knop-groen" onclick="App.bevestigNaam()">
+        🚀 Start met spelen!
+      </button>
+    </div>
+  </div>
+
+  <!-- POPUP -->
+  <div class="popup-overlay" id="popupOverlay" style="display:none;">
+    <div class="popup-kaart">
+      <div class="popup-emoji" id="popupEmoji">💬</div>
+      <p class="popup-tekst" id="popupTekst"></p>
+      <div class="popup-knoppen" id="popupKnoppen"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="app-footer">
+    <p>Copyright 2026 Joost van de Ven</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

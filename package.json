@@ -1,0 +1,9 @@
+{
+  "name": "begrijpendtuben",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx wrangler pages dev public --kv KV --binding USE_AI=true",
+    "deploy": "npx wrangler pages deploy public"
+  }
+}

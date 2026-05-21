@@ -1,0 +1,25 @@
+# Cloudflare / Wrangler
+.wrangler/
+.dev.vars
+
+# Secrets (NOOIT committen)
+.env
+.env.local
+*.key
+*.pem
+
+# Node
+node_modules/
+npm-debug.log
+package-lock.json.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code (lokale instellingen)
+.claude/

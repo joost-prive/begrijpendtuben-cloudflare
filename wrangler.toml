@@ -1,0 +1,7 @@
+name = "begrijpendtuben"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "public"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "39d137341749467f94a69e4fa02bfeb2"
